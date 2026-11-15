@@ -18,6 +18,11 @@ jobs:
           mkdir -p ~/.local/share/godot/export_templates/
           mv /root/.local/share/godot/export_templates/* ~/.local/share/godot/export_templates/
 
+      - name: Initialize Project Import Cache
+        run: |
+          # Boot up headless editor once so Godot imports all scenes and generates .godot cache
+          godot --headless --editor --quit || true
+
       - name: Build Debug APK
         run: |
           mkdir -p build/android
