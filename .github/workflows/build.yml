@@ -9,6 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: barichello/godot-ci:4.3
+    env:
+      JAVA_HOME: /usr/lib/jvm/default-java
+      ANDROID_HOME: /usr/lib/android-sdk
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
