@@ -5,47 +5,42 @@ on:
     branches: [ main ]
 
 jobs:
-  export-android:
+  build:
     runs-on: ubuntu-latest
-    container:
-      image: barichello/godot-ci:4.3
-    env:
-      JAVA_HOME: /usr/lib/jvm/default-java
-      ANDROID_HOME: /usr/lib/android-sdk
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Export Templates
-        run: |
-          VERSION="4.3.stable"
-          mkdir -p ~/.local/share/godot/export_templates/$VERSION
-          if [ -d /root/.local/share/godot/export_templates/$VERSION ]; then
-            cp -r /root/.local/share/godot/export_templates/$VERSION/* ~/.local/share/godot/export_templates/$VERSION/
-          elif [ -d /root/.local/share/godot/export_templates/ ]; then
-            cp -r /root/.local/share/godot/export_templates/* ~/.local/share/godot/export_templates/$VERSION/
-          fi
+      - name: Set up Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-      - name: Configure Godot Editor Settings
+      - name: Install Godot Engine
         run: |
-          mkdir -p ~/.config/godot
-          JAVA_PATH=$(dirname $(dirname $(readlink -f $(which javac))))
-          cat << EOF > ~/.config/godot/editor_settings-4.tres
-          [gd_resource type="EditorSettings" load_format=3]
+          wget https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip
+          unzip Godot_v4.3-stable_linux.x86_64.zip
+          mv Godot_v4.3-stable_linux.x86_64 /usr/local/bin/godot
 
-          [resource]
-          export/android/java_sdk_path = "$JAVA_PATH"
-          export/android/android_sdk_path = "/usr/lib/android-sdk"
-          EOF
+          # Download export templates
+          mkdir -p ~/.local/share/godot/export_templates/4.3.stable
+          wget https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz
+          unzip Godot_v4.3-stable_export_templates.tpz
+          mv templates/* ~/.local/share/godot/export_templates/4.3.stable/
+
+      - name: Install Android SDK & Build Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y android-sdk adb
+          # Accept SDK licenses
+          yes | sdkmanager --licenses || true
+          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
       - name: Generate Debug Keystore
         run: |
           mkdir -p ~/.android
           keytool -keyalg RSA -genkeypair -alias androiddebugkey -keypass android -keystore ~/.android/debug.keystore -storepass android -dname "CN=Android Debug,O=Android,C=US" -validity 10000
-
-      - name: Initialize Project Import Cache
-        run: |
-          godot --headless --editor --quit || true
 
       - name: Build Debug APK
         run: |
