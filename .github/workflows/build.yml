@@ -18,8 +18,13 @@ jobs:
 
       - name: Setup Export Templates
         run: |
-          mkdir -p ~/.local/share/godot/export_templates/
-          mv /root/.local/share/godot/export_templates/* ~/.local/share/godot/export_templates/
+          VERSION="4.3.stable"
+          mkdir -p ~/.local/share/godot/export_templates/$VERSION
+          if [ -d /root/.local/share/godot/export_templates/$VERSION ]; then
+            cp -r /root/.local/share/godot/export_templates/$VERSION/* ~/.local/share/godot/export_templates/$VERSION/
+          elif [ -d /root/.local/share/godot/export_templates/ ]; then
+            cp -r /root/.local/share/godot/export_templates/* ~/.local/share/godot/export_templates/$VERSION/
+          fi
 
       - name: Generate Debug Keystore
         run: |
