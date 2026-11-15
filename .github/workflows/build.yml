@@ -18,6 +18,11 @@ jobs:
           mkdir -p ~/.local/share/godot/export_templates/
           mv /root/.local/share/godot/export_templates/* ~/.local/share/godot/export_templates/
 
+      - name: Generate Debug Keystore
+        run: |
+          mkdir -p ~/.android
+          keytool -keyalg RSA -genkeypair -alias androiddebugkey -keypass android -keystore ~/.android/debug.keystore -storepass android -dname "CN=Android Debug,O=Android,C=US" -validity 10000
+
       - name: Initialize Project Import Cache
         run: |
           godot --headless --editor --quit || true
